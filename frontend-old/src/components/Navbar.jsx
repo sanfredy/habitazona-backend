@@ -1,0 +1,24 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+function Navbar() {
+  return (
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div className="container">
+        <Link className="navbar-brand" to="/">🏠 Habitazona</Link>
+        <div className="collapse navbar-collapse justify-content-end">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <Link className="nav-link" to="/">Inicio</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/publicar">Publicar</Link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+export default Navbar;

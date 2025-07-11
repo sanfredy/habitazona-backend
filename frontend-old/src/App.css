@@ -1,0 +1,44 @@
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+.titulo {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitulo {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+.mensaje {
+  text-align: center;
+  font-style: italic;
+  color: #777;
+}
+
+.lista-publicaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.publicacion {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  transition: box-shadow 0.2s ease;
+}
+
+.publicacion:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
