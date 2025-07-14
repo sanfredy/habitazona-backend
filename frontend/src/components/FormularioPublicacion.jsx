@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import './FormularioPublicacion.css'; // ¡Esta es la línea que confirma la importación!
 
 function FormularioPublicacion({ onPublicar }) {
   const [formulario, setFormulario] = useState({
@@ -10,9 +11,17 @@ function FormularioPublicacion({ onPublicar }) {
     zona: "",
   });
 
-  const [imagenes, setImagenes] = useState([]);
+  // Estado para los archivos de imagen reales que se enviarán al backend
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  // Estado para las URLs de previsualización de las imágenes
+  const [imagePreviews, setImagePreviews] = useState([]);
+  // Estado para el mensaje de error del límite de imágenes
+  const [imageLimitMessage, setImageLimitMessage] = useState('');
+
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState(false);
+
+  const MAX_IMAGES = 3; // Límite máximo de imágenes
 
   const handleChange = (e) => {
     setFormulario({
@@ -21,15 +30,68 @@ function FormularioPublicacion({ onPublicar }) {
     });
   };
 
-  const handleImagenes = (e) => {
-    const archivos = Array.from(e.target.files).slice(0, 3); // máximo 3
-    setImagenes(archivos);
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const newFiles = [];
+    const newPreviews = [];
+
+    setImageLimitMessage(''); // Limpiar cualquier mensaje de error previo
+
+    if (files.length > MAX_IMAGES) {
+      setImageLimitMessage(`Solo puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
+      e.target.value = null; // Esto limpia la selección visual del input file
+      setSelectedFiles([]); // Vaciar los archivos seleccionados
+      setImagePreviews([]); // Vaciar las previsualizaciones
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        newFiles.push(file);
+        newPreviews.push(URL.createObjectURL(file)); // Crea una URL temporal para la previsualización
+      }
+    });
+
+    setSelectedFiles(newFiles);
+    setImagePreviews(newPreviews);
   };
+
+  const handleRemoveImage = (indexToRemove) => {
+    // Eliminar la imagen del array de archivos seleccionados
+    const updatedSelectedFiles = selectedFiles.filter((_, index) => index !== indexToRemove);
+    setSelectedFiles(updatedSelectedFiles);
+
+    // Eliminar la URL de previsualización correspondiente
+    const updatedImagePreviews = imagePreviews.filter((_, index) => index !== indexToRemove);
+    setImagePreviews(updatedImagePreviews);
+
+    // Limpiar el mensaje de límite si se reduce la cantidad
+    if (updatedSelectedFiles.length < MAX_IMAGES) {
+      setImageLimitMessage('');
+    }
+  };
+
+  // Limpiar las URLs de objeto cuando el componente se desmonte o las imágenes cambian
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviews]); // Se ejecuta cuando imagePreviews cambia o al desmontar
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(false);
     setEnviado(false);
+
+    // Validación final antes de enviar
+    if (selectedFiles.length === 0) {
+      setImageLimitMessage('Por favor, selecciona al menos una imagen.');
+      return;
+    }
+    if (selectedFiles.length > MAX_IMAGES) {
+      setImageLimitMessage(`Solo puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
+      return;
+    }
 
     try {
       const formData = new FormData();
@@ -40,13 +102,14 @@ function FormularioPublicacion({ onPublicar }) {
       });
 
       // Añadir imágenes
-      imagenes.forEach((img) => formData.append("imagenes", img));
+      selectedFiles.forEach((img) => formData.append("imagenes", img)); // Usar selectedFiles
 
       await axios.post(`${import.meta.env.VITE_API_URL}/publicaciones`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       setEnviado(true);
+      // Limpiar el formulario y los estados de imagen después del envío exitoso
       setFormulario({
         titulo: "",
         descripcion: "",
@@ -54,7 +117,9 @@ function FormularioPublicacion({ onPublicar }) {
         whatsapp: "",
         zona: "",
       });
-      setImagenes([]);
+      setSelectedFiles([]);
+      setImagePreviews([]);
+      setImageLimitMessage(''); // Limpiar el mensaje de límite
 
       if (onPublicar) onPublicar();
     } catch (err) {
@@ -199,15 +264,35 @@ function FormularioPublicacion({ onPublicar }) {
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Subir imágenes (máximo 3)</label>
+        {/* Sección de Subir imágenes con previsualización */}
+        <div className="mb-3 image-upload-container">
+          <label className="form-label">Subir imágenes (máximo {MAX_IMAGES})</label>
           <input
             type="file"
             className="form-control"
             multiple
             accept="image/*"
-            onChange={handleImagenes}
+            onChange={handleFileChange}
           />
+          {imageLimitMessage && (
+            <p className="text-danger mt-2">{imageLimitMessage}</p>
+          )}
+
+          <div className="preview-container mt-3">
+            {imagePreviews.map((url, index) => (
+              <div key={index} className="thumbnail-wrapper">
+                <img src={url} alt={`Preview ${index}`} className="img-thumbnail" />
+                <button
+                  type="button"
+                  className="remove-image-button"
+                  onClick={() => handleRemoveImage(index)}
+                  aria-label="Quitar imagen"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <button type="submit" className="btn btn-primary">Publicar</button>

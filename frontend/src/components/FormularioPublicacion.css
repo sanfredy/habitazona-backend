@@ -1,0 +1,252 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import './FormularioPublicacion.css'; // Importa el archivo CSS para los estilos
+
+function FormularioPublicacion({ onPublicar }) {
+  const [formulario, setFormulario] = useState({
+    titulo: "",
+    descripcion: "",
+    email: "",
+    whatsapp: "",
+    zona: "",
+  });
+
+  // Estado para los archivos de imagen reales que se enviarán al backend
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  // Estado para las URLs de previsualización de las imágenes
+  const [imagePreviews, setImagePreviews] = useState([]);
+  // Estado para el mensaje de error del límite de imágenes
+  const [imageLimitMessage, setImageLimitMessage] = useState('');
+
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState(false);
+
+  const MAX_IMAGES = 3; // Límite máximo de imágenes
+
+  const handleChange = (e) => {
+    setFormulario({
+      ...formulario,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const newFiles = [];
+    const newPreviews = [];
+
+    setImageLimitMessage(''); // Limpiar cualquier mensaje de error previo
+
+    if (files.length > MAX_IMAGES) {
+      setImageLimitMessage(`Solo puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
+      // Opcional: podrías limpiar el input file para evitar que el usuario piense que se subieron
+      e.target.value = null; // Esto limpia la selección visual del input file
+      setSelectedFiles([]); // Vaciar los archivos seleccionados
+      setImagePreviews([]); // Vaciar las previsualizaciones
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        newFiles.push(file);
+        newPreviews.push(URL.createObjectURL(file)); // Crea una URL temporal para la previsualización
+      }
+    });
+
+    setSelectedFiles(newFiles);
+    setImagePreviews(newPreviews);
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    // Eliminar la imagen del array de archivos seleccionados
+    const updatedSelectedFiles = selectedFiles.filter((_, index) => index !== indexToRemove);
+    setSelectedFiles(updatedSelectedFiles);
+
+    // Eliminar la URL de previsualización correspondiente
+    const updatedImagePreviews = imagePreviews.filter((_, index) => index !== indexToRemove);
+    setImagePreviews(updatedImagePreviews);
+
+    // Limpiar el mensaje de límite si se reduce la cantidad
+    if (updatedSelectedFiles.length < MAX_IMAGES) {
+      setImageLimitMessage('');
+    }
+    // No es necesario resetear el input `type="file"` del DOM aquí,
+    // ya que estamos controlando los archivos con el estado `selectedFiles`.
+  };
+
+  // Limpiar las URLs de objeto cuando el componente se desmonte o las imágenes cambien
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviews]); // Se ejecuta cuando imagePreviews cambia o al desmontar
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(false);
+    setEnviado(false);
+
+    // Validación final antes de enviar
+    if (selectedFiles.length === 0) {
+      setImageLimitMessage('Por favor, selecciona al menos una imagen.');
+      return;
+    }
+    if (selectedFiles.length > MAX_IMAGES) {
+      setImageLimitMessage(`Solo puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+
+      // Añadir campos de texto
+      Object.entries(formulario).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      // Añadir imágenes
+      selectedFiles.forEach((img) => formData.append("imagenes", img)); // Usar selectedFiles
+
+      await axios.post(`${import.meta.env.VITE_API_URL}/publicaciones`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setEnviado(true);
+      // Limpiar el formulario y los estados de imagen después del envío exitoso
+      setFormulario({
+        titulo: "",
+        descripcion: "",
+        email: "",
+        whatsapp: "",
+        zona: "",
+      });
+      setSelectedFiles([]);
+      setImagePreviews([]);
+      setImageLimitMessage(''); // Limpiar el mensaje de límite
+
+      if (onPublicar) onPublicar();
+    } catch (err) {
+      console.error("Error al publicar:", err);
+      setError(true);
+    }
+  };
+
+  return (
+    <div className="mt-5">
+      <h2 className="text-center mb-4">📝 Publicar habitación o apartaestudio</h2>
+
+      {enviado && <div className="alert alert-success">✅ ¡Publicación enviada correctamente!</div>}
+      {error && <div className="alert alert-danger">❌ Error al enviar publicación.</div>}
+
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
+        <div className="mb-3">
+          <label className="form-label">Título</label>
+          <input
+            type="text"
+            className="form-control"
+            name="titulo"
+            value={formulario.titulo}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Zona o localidad</label>
+          <select
+            className="form-select"
+            name="zona"
+            value={formulario.zona}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Seleccione una zona</option>
+
+            <optgroup label="📍 Bogotá - Zona Norte">
+              <option value="Usaquén">Usaquén</option>
+              <option value="Chapinero">Chapinero</option>
+              <option value="Suba">Suba</option>
+              <option value="Barrios Unidos">Barrios Unidos</option>
+              <option value="Teusaquillo (norte)">Teusaquillo (norte)</option>
+            </optgroup>
+
+            <optgroup label="📍 Bogotá - Zona Sur">
+              <option value="Bosa">Bosa</option>
+              <option value="Kennedy (sur)">Kennedy (sur)</option>
+              <option value="Tunjuelito">Tunjuelito</option>
+              <option value="Ciudad Bolívar">Ciudad Bolívar</option>
+              <option value="Rafael Uribe Uribe">Rafael Uribe Uribe</option>
+              <option value="San Cristóbal">San Cristóbal</option>
+              <option value="Usme">Usme</option>
+            </optgroup>
+
+            <optgroup label="📍 Bogotá - Zona Occidente">
+              <option value="Engativá">Engativá</option>
+              <option value="Fontibón">Fontibón</option>
+              <option value="Kennedy (norte)">Kennedy (norte)</option>
+              <option value="Teusaquillo (occidente)">Teusaquillo (occidente)</option>
+            </optgroup>
+
+            <optgroup label="📍 Bogotá - Zona Oriente">
+              <option value="Santa Fe">Santa Fe</option>
+              <option value="La Candelaria">La Candelaria</option>
+              <option value="San Cristóbal (oriente)">San Cristóbal (oriente)</option>
+              <option value="Usaquén (oriente)">Usaquén (oriente)</option>
+            </optgroup>
+
+            <optgroup label="🏞️ Municipios - Zona Norte">
+              <option value="Chía">Chía</option>
+              <option value="Cajicá">Cajicá</option>
+              <option value="Zipaquirá">Zipaquirá</option>
+              <option value="Tocancipá">Tocancipá</option>
+              <option value="Sopó">Sopó</option>
+              <option value="La Calera">La Calera</option>
+            </optgroup>
+
+            <optgroup label="🏞️ Municipios - Zona Sur">
+              <option value="Soacha">Soacha</option>
+              <option value="Sibaté">Sibaté</option>
+              <option value="Pasca">Pasca</option>
+              <option value="Fusagasugá">Fusagasugá</option>
+              <option value="Granada">Granada</option>
+            </optgroup>
+
+            <optgroup label="🏞️ Municipios - Zona Occidente">
+              <option value="Mosquera">Mosquera</option>
+              <option value="Funza">Funza</option>
+              <option value="Madrid">Madrid</option>
+              <option value="Facatativá">Facatativá</option>
+              <option value="El Rosal">El Rosal</option>
+              <option value="Bojacá">Bojacá</option>
+              <option value="Zipacón">Zipacón</option>
+            </optgroup>
+
+            <optgroup label="🏞️ Municipios - Zona Oriente">
+              <option value="Choachí">Choachí</option>
+              <option value="Ubaque">Ubaque</option>
+              <option value="Fómeque">Fómeque</option>
+              <option value="Chipaque">Chipaque</option>
+              <option value="Guasca">Guasca</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Descripción</label>
+          <textarea
+            className="form-control"
+            name="descripcion"
+            value={formulario.descripcion}
+            onChange={handleChange}
+            rows="3"
+            required
+          ></textarea>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Correo electrónico</label>
+          <input
+            type="email"
+            className="form-control"
+            name="email"
+            value={formulario.email}

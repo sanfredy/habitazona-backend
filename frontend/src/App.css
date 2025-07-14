@@ -20,6 +20,7 @@ h1, h2, h3 {
 .card {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border: none;
+  border-radius: 0.5rem;
 }
 
 .card img {
@@ -64,13 +65,35 @@ form .form-label {
   font-weight: 600;
 }
 
+form .form-control,
+form .form-select {
+  border-radius: 0.3rem;
+}
+
 .alert {
   font-weight: bold;
+}
+
+/* Carrusel Bootstrap */
+.carousel-inner img {
+  height: 200px;
+  object-fit: cover;
+  border-radius: 0.3rem;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .filtros {
     flex-direction: column;
+  }
+
+  .card img {
+    height: 180px;
   }
 }
