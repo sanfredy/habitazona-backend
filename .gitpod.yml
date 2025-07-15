@@ -1,38 +1,57 @@
 # .gitpod.yml
 
-# Configuración de los puertos y servicios
-ports:
-  - port: 3000 # Puerto para el frontend React (Vite)
-    onOpen: open-browser # Abrir automáticamente en el navegador
-  - port: 8000 # Puerto para el servidor de desarrollo PHP
-    onOpen: ignore # No abrir automáticamente, lo usaremos como API
+# La imagen base que se usará para el espacio de trabajo.
+# Gitpod tiene imágenes predefinidas para muchos lenguajes (ej. gitpod/workspace-node, gitpod/workspace-python, etc.)
+# Puedes usar una imagen más específica o tu propia imagen Docker si la tienes.
+image: gitpod/workspace:latest # O una más específica como gitpod/workspace-node
 
-# Tareas que se ejecutarán automáticamente al iniciar el espacio de trabajo
+# Define las tareas que se ejecutarán en el espacio de trabajo.
+# Una tarea representa un terminal. Puedes tener múltiples tareas.
 tasks:
-  - name: Start PHP Backend
+  - name: Setup Backend
+    # 'init' se ejecuta una sola vez cuando el espacio de trabajo se inicia por primera vez (o después de un reinicio completo).
+    # Aquí es donde instalas las dependencias de tu proyecto.
     init: |
-      # Instalar PHP si no está disponible (Gitpod suele tenerlo)
-      # Si necesitas extensiones PHP específicas, las instalarías aquí
-      echo "Starting PHP development server..."
+      echo "Instalando dependencias..."
+      # --- Reemplaza la siguiente línea según tu lenguaje ---
+      # Si es Node.js: npm install
+      # Si es Python: pip install -r requirements.txt
+      # Si es PHP: composer install
+      # Si es Ruby: bundle install
+      npm install # EJEMPLO: Asumiendo Node.js para este ejemplo
+      echo "Dependencias instaladas."
+
+    # 'command' se ejecuta cada vez que el terminal de la tarea se abre o se reinicia.
+    # Aquí es donde inicias tu aplicación o servidor de desarrollo.
     command: |
-      # Navega a la carpeta de tu API PHP
-      cd backend/api
-      # Inicia el servidor de desarrollo de PHP en el puerto 8000
-      # --docroot=. asegura que el servidor sirva archivos desde la carpeta actual
-      php -S 0.0.0.0:8000
-    # Ejecutar en un terminal separado
-    openMode: split-right
+      echo "Iniciando servidor backend..."
+      # --- Reemplaza la siguiente línea según tu lenguaje ---
+      # Si es Node.js: npm start o node server.js
+      # Si es Python: python app.py o flask run
+      # Si es PHP (Laravel): php artisan serve --host 0.0.0.0 --port 8000
+      npm start # EJEMPLO: Asumiendo Node.js
+      echo "Servidor backend iniciado."
 
-  - name: Install Frontend Dependencies & Start React App
-    init: |
-      echo "Installing frontend dependencies..."
-      cd frontend
-      npm install
-    command: |
-      echo "Starting React development server..."
-      cd frontend
-      npm run dev
-    # Ejecutar en un terminal separado
-    openMode: split-panel
+# Define los puertos que tu aplicación expone y cómo Gitpod debe manejarlos.
+ports:
+  - port: 3000 # Reemplaza con el puerto real de tu backend (ej. 8000 para Laravel/Django, 3000 para Node.js, etc.)
+    onOpen: open-browser # o 'open-preview' si quieres que se abra en un panel al lado, 'ignore' si no quieres que se abra automáticamente
+    visibility: public # Hace que el puerto sea accesible desde fuera del espacio de trabajo (necesario para ver tu app)
 
-
+# Configuraciones opcionales para la preconstrucción de los espacios de trabajo
+# Pre-builds aceleran el tiempo de inicio de los espacios de trabajo
+# Puedes habilitarlo para la rama principal o para los pull requests.
+# Para un proyecto pequeño, quizás no sea estrictamente necesario al inicio.
+# https://www.gitpod.io/docs/configure/workspaces/prebuilds
+#github:
+#  prebuilds:
+#    # Master/main branch
+#    main: true
+#    # All branches (defaults to false)
+#    branches: true
+#    # All pull requests (defaults to true)
+#    pullRequests: true
+#    # All pull requests from forks (defaults to false)
+#    pullRequestsFromForks: true
+#    # Caching for prebuilds (defaults to true)
+#    addCheck: true
