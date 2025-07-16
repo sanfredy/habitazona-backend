@@ -12,7 +12,7 @@
   // Define los puertos que tu aplicación expone.
   // Esto es similar a la sección 'ports' de Gitpod.
   "portsAttributes": {
-    "5000": { // El puerto 5000 que usa tu servidor Express (Actualizado)
+    "5050": { // El puerto 5050 que usa tu servidor Express (Actualizado)
       "label": "HabitaZona Backend",
       "onAutoForward": "openBrowser" // Abre automáticamente en el navegador
     }
