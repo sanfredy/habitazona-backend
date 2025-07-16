@@ -1,0 +1,37 @@
+{
+  "name": "Node.js Backend (HabitaZona)",
+  // Utiliza una imagen base de Dev Containers con Node.js preinstalado.
+  // Puedes especificar una versión de Node.js si lo necesitas, por ejemplo: "mcr.microsoft.com/devcontainers/javascript-node:18"
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:latest",
+
+  // Comandos que se ejecutarán una vez que el Codespace esté listo.
+  // Esto es similar a la sección 'init' de Gitpod.
+  // Se añade 'chmod +x node_modules/.bin/nodemon' para asegurar permisos de ejecución.
+  "postCreateCommand": "cd server && npm install && chmod +x node_modules/.bin/nodemon",
+
+  // Define los puertos que tu aplicación expone.
+  // Esto es similar a la sección 'ports' de Gitpod.
+  "portsAttributes": {
+    "5000": { // El puerto 5000 que usa tu servidor Express (Actualizado)
+      "label": "HabitaZona Backend",
+      "onAutoForward": "openBrowser" // Abre automáticamente en el navegador
+    }
+  },
+
+  // Configuración de VS Code para el Codespace (opcional)
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint", // Extensión para linting de JavaScript
+        "esbenp.prettier-vscode" // Extensión para formateo de código
+      ]
+    }
+  },
+
+  // Tareas que se ejecutarán automáticamente al iniciar el Codespace.
+  // Esto es similar a la sección 'command' de Gitpod.
+  "remoteUser": "node", // Ejecuta los comandos como el usuario 'node'
+  "workspaceFolder": "/workspaces/habitazona-backend", // Ruta base del espacio de trabajo actualizada para el nuevo proyecto
+  // Se cambia 'npm run dev' por la llamada directa a nodemon para mayor robustez.
+  "onCreateCommand": "cd server && ./node_modules/.bin/nodemon index.js" // Inicia el servidor
+}
