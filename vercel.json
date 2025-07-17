@@ -1,7 +1,7 @@
 {
   "functions": {
     "server/index.js": {
-      "runtime": "nodejs18.x" // Puedes usar "nodejs20.x" si prefieres Node.js 20
+      "runtime": "nodejs18.x"
     }
   },
   "routes": [
